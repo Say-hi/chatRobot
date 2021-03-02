@@ -21,6 +21,9 @@
         登录
       </div>
     </el-form-item>
+    <div class='visitor'>
+      <span @click='handleSubmit("visitor")' class='pointer'>游客登录</span>
+    </div>
   </el-form>
 </template>
 
@@ -50,11 +53,14 @@ export default {
   },
   //  方法集合
   methods: {
-    handleSubmit () {
+    handleSubmit (type) {
+      if (type === 'visitor') {
+        this.$router.push({name: 'Chat'})
+        return
+      }
       this.$refs.loginForm.validate(flag => {
         flag && (this.$router.push({name: 'Chat'}))
       })
-      
     }
   },
   // 生命周期-挂载完成（可以访问DOM元素）
@@ -69,5 +75,9 @@ export default {
   color: #fff;
   font-weight: 700;
   border-radius: 4px;
+}
+.visitor {
+  text-align: center;
+  color: rgb(146, 142, 142);
 }
 </style>

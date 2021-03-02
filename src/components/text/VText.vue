@@ -134,7 +134,7 @@ export default {
         return;
       }
       let temp = ''
-      if (question.length) {
+      if (question && question.length) {
         temp = question
         this.warn = false
       } else if (this.content.length <= 0) {
