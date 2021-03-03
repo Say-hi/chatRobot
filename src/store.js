@@ -36,7 +36,8 @@ const state = {
   onlineState: "离线",
   // 输入内容的草稿
   drafts: {},
-  inputContent: ""
+  inputContent: "",
+  user_token: CacheUtil.getFromLocalStorage('user_token')
 }
 
 const mutations = {
@@ -127,6 +128,11 @@ const mutations = {
   setInputContent(state, c) {
     state.inputContent = c;
   },
+  setUserInfo(state, c) {
+    CacheUtil.setLocalStorage('user_token', c.token || null)
+    state.user = c
+    state.user_token = c.token || null
+  },
   addDraft(state, draft) {
     state.drafts[draft.openId] = draft.content;
   }
@@ -174,7 +180,8 @@ const getters = {
       reachable,
       unreachable
     }
-  }
+  },
+  token: state => state.user_token
 }
 
 const actions = {

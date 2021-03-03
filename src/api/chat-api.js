@@ -5,6 +5,55 @@ const MSG_CACHE_KEY = "msgs:";
 // 图片最大 2M
 const IMAGE_MAX_SIZE = 1 << 21;
 
+function userLogin (data) {
+  return new Promise((resolve, reject) => {
+    HttpUtil.post(ApiPaths.hule.login, data)
+    .then(res => {
+      resolve(res)
+    }, rej => {
+      reject(rej)
+    }).catch(err => {
+      reject(err)
+    })
+  })
+}
+function getInitInfo () {
+  return new Promise((resolve, reject) => {
+    HttpUtil.post(ApiPaths.hule.getInitInfo)
+    .then(res => {
+      resolve(res)
+    }, rej => {
+      reject(rej)
+    }).catch(err => {
+      reject(err)
+    })
+  })
+}
+function questionList (data) {
+  return new Promise((resolve, reject) => {
+    HttpUtil.post(ApiPaths.hule.questionList, data)
+    .then(res => {
+      resolve(res)
+    }, rej => {
+      reject(rej)
+    }).catch(err => {
+      reject(err)
+    })
+  })
+}
+function chatRecord (data) {
+  return new Promise((resolve, reject) => {
+    HttpUtil.post(ApiPaths.hule.chatRecord, data)
+    .then(res => {
+      resolve(res)
+    }, rej => {
+      reject(rej)
+    }).catch(err => {
+      reject(err)
+    })
+  })
+}
+
 /**
  * 获取聊天好友列表
  */
@@ -76,18 +125,17 @@ function getRecordsByOpenId(openId, firstCreateTime) {
  * @param {String} openId 用户OpenId
  */
 function setRead(openId) {
-  return new Promise((res, rej) => {
+  return new Promise((resolve, reject) => {
     HttpUtil.post(ApiPaths.chat.setRead, {
         openId
       })
-      .then((rs) => {
-        if (rs.code >= 0) {
-          res(rs.data);
-        } else {
-          rej(rs.msg)
-        }
+      .then(res => {
+        resolve(res)
+      }, rej => {
+        reject(rej)
+      }).catch(err => {
+        reject(err)
       })
-      .catch(e => rej(e.msg));
   })
 }
 /**
@@ -114,29 +162,15 @@ function getChatItemByOpenId(openId) {
  * @param {Object} msg 消息体
  */
 function send(msg) {
-  return new Promise((res, rej) => {
-    if (!msg.appId) {
-      return rej("appId不能为空");
-    }
-    if (!msg.openId) {
-      return rej("openId不能为空");
-    }
-    if (!msg.content || !msg.content.trim()) {
-      return rej("内容不能为空");
-    }
-    if (msg.content.length > 1024) {
-      return rej("内容过长!");
-    }
-    res({})
-    // HttpUtil.post(ApiPaths.chat.send, msg)
-    //   .then((rs) => {
-    //     if (rs.code >= 0) {
-    //       res(rs.data);
-    //     } else {
-    //       rej(rs.msg)
-    //     }
-    //   })
-    //   .catch(e => rej(e.msg));
+  return new Promise((resolve, reject) => {
+    HttpUtil.post(ApiPaths.chat.send, msg)
+      .then(res => {
+        resolve(res)
+      }, rej => {
+        reject(rej)
+      }).catch(err => {
+        reject(err)
+      })
   });
 }
 
@@ -176,5 +210,9 @@ export default {
   setRead,
   getChatItemByOpenId,
   sendImage,
-  send
+  send,
+  userLogin,
+  getInitInfo,
+  questionList,
+  chatRecord
 }

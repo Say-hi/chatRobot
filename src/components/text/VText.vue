@@ -17,7 +17,7 @@
       <div style='position: relative;'>
         <transition name='fade'>
           <div v-if='showUserCanChooseQuestion' class='userCanChooseQuestion'>
-            <div @click='send(showUserCanChooseQuestionText)' v-for='item in 5' :key='item'>{{ showUserCanChooseQuestionText }}</div>
+            <div @click='send(item)' v-for='item of questionBackList' :key='item.knowledgeBaseId'>{{ item.question }}</div>
           </div>
         </transition> 
         <textarea ref="text"
@@ -33,7 +33,7 @@
       </div>
       <div class="send"
            v-loading="sending"
-           @click="send">
+           @click="send()">
         <span class="pointer">发送</span>
       </div>
       <transition name="appear">
@@ -50,6 +50,7 @@
 import { mapGetters, mapState, mapMutations } from "vuex";
 import { emojis, toOriginEmoji } from "@/utils/emoji-util";
 import ChatApi from "@/api/chat-api";
+import dayjs from 'dayjs'
 const ImagePreview = () => import("../common/ImagePreview");
 export default {
   name: "VText",
@@ -67,7 +68,8 @@ export default {
       preview: false,
       previewImg: "",
       showUserCanChooseQuestion: false,
-      showUserCanChooseQuestionText: null
+      showUserCanChooseQuestionText: null,
+      questionBackList: []
     };
   },
   methods: {
@@ -130,12 +132,15 @@ export default {
     },
     // 点击发送按钮发送信息
     send(question) {
+      this.showUserCanChooseQuestion = false
       if (this.sending) {
         return;
       }
       let temp = ''
-      if (question && question.length) {
-        temp = question
+      let knowledgeBaseId = null
+      if (question) {
+        temp = question.question
+        knowledgeBaseId = question.knowledgeBaseId
         this.warn = false
       } else if (this.content.length <= 0) {
         this.warn = true;
@@ -148,7 +153,7 @@ export default {
       } else {
         temp = this.content
       }
-      this.showUserCanChooseQuestion = !this.showUserCanChooseQuestion
+      // this.showUserCanChooseQuestion = !this.showUserCanChooseQuestion
       this.sending = true;
       let msg = {
         appId: '11',
@@ -159,8 +164,20 @@ export default {
         createTime: new Date()
       };
       this.addNewMsg(msg)
-      ChatApi.send(msg)
-        .then(() => {
+      ChatApi.send({
+        knowledgeBaseId,
+        question: temp,
+        questionTime: dayjs(new Date()).format('YYYY-MM-DD HH:mm:ss')
+      })
+        .then(res => {
+          this.addNewMsg({
+            appId: '11',
+            content: res.answer,
+            openId: '13',
+            sendType: "ANSWER",
+            msgType: "text",
+            createTime: res.answerTime
+          })
           this.content = "";
         })
         .catch(e => this.$alert(e || "发送失败，请稍候重试"))
@@ -192,6 +209,18 @@ export default {
       } else {
         return "";
       }
+    },
+    questionList () {
+      ChatApi.questionList({
+        question: this.inputContent
+      }).then(res => {
+        if (res.length) {
+          this.showUserCanChooseQuestion = true
+        } else {
+          this.showUserCanChooseQuestion = false
+        }
+        this.questionBackList = res
+      })
     }
   },
   // 在进入的时候 聚焦输入框
@@ -209,9 +238,9 @@ export default {
     inputContent(v) {
       this.timer && clearTimeout(this.timer)
       v && (this.timer = setTimeout(() => {
-        this.showUserCanChooseQuestion = true
-        this.showUserCanChooseQuestionText = v
-      }, 500))
+        this.questionList()
+        // this.showUserCanChooseQuestionText = v
+      }, 200))
       // if (this.inputContent === "") {
       //   if (this.frequency === 0) {
       //     this.warn = true;

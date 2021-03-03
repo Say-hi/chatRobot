@@ -4,6 +4,6 @@
  */
 module.exports = {
   NODE_ENV: '"production"',
-  CHAT_SERVER: '"http://localhost:8013"',
+  CHAT_SERVER: '"127.0.0.1:8400"',
   MOCK: "false"
 }

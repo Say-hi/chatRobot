@@ -5,9 +5,9 @@
       <span style='font-size: 18px; color: #ff7524;margin-left: 10px;'>智能客服在线系统</span>
     </div>
     <!-- <p class='c303e5f f20 fw7' style="margin-top: 70px">欢迎登录 中银粤财FOP-基金投资管理平台</p> -->
-    <el-form-item prop="userName" class='mt20' style="margin-top: 50px;">
-      <div class='f12 c303e5f'>用户名</div>
-      <el-input v-model="form.userName" placeholder="请输入用户名">
+    <el-form-item prop="phone" class='mt20' style="margin-top: 50px;">
+      <div class='f12 c303e5f'>手机号</div>
+      <el-input v-model="form.phone" placeholder="请输入用户名">
       </el-input>
     </el-form-item>
     <el-form-item prop="password">
@@ -28,16 +28,19 @@
 </template>
 
 <script>
+import md5 from 'js-md5'
+import ChatApi from "@/api/chat-api";
+import { mapMutations } from "vuex";
 export default {
   components: {},
   data() {
     return {
       form: {},
       rules: {
-        userName: [
+        phone: [
           {
             required: true,
-            message: '请输入用户名',
+            message: '请输入手机号',
             trigger: 'blur'
           }
         ],
@@ -53,13 +56,29 @@ export default {
   },
   //  方法集合
   methods: {
+    ...mapMutations(['setUserInfo']),
     handleSubmit (type) {
       if (type === 'visitor') {
-        this.$router.push({name: 'Chat'})
+        ChatApi.userLogin({
+          loginType: 0
+        }).then(res => {
+          this.setUserInfo(res)
+          this.$router.push({name: 'Chat'})
+        })
         return
       }
       this.$refs.loginForm.validate(flag => {
-        flag && (this.$router.push({name: 'Chat'}))
+        flag && ChatApi.userLogin({
+          phone: this.form.phone,
+          password: md5(this.form.password),
+          loginType: 1
+        }).then(res => {
+          this.setUserInfo(res)
+          this.$router.push({name: 'Chat'})
+        }).catch(err => {
+          console.log('err',err)
+        })
+        // flag && (this.$router.push({name: 'Chat'}))
       })
     }
   },

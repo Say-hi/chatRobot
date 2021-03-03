@@ -1,4 +1,5 @@
-let chat_server = process.env.CHAT_SERVER;
+let chat_server = 'http://106.52.213.134:8400/api/scs/';
+// let chat_server = 'http://127.0.0.1:8400/api/scs/';
 let apiPaths = {
   websocket: {
     endpoint: chat_server + "/ws",
@@ -12,9 +13,16 @@ let apiPaths = {
     getChatItemByOpenId: chat_server + "/chat/getChatItemByOpenId",
     getRecordsByOpenId: chat_server + "/chat/getRecordsByOpenId",
     setRead: chat_server + '/chat/setRead',
-    send: chat_server + "/chat/send",
+    send: chat_server + "answer",
     // 发送图片消息
     sendImage: chat_server + "/chat/sendImage",
+  },
+  hule: {
+    login: chat_server + 'login',
+    logout: chat_server + 'logout',
+    getInitInfo: chat_server + 'getInfo',
+    questionList: chat_server + 'questionList',
+    chatRecord: chat_server + 'chatRecord',
   }
 }
 export default apiPaths

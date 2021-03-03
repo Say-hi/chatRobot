@@ -30,6 +30,9 @@
          ref="list">
       <ul class="message-ul"
           v-if="selectedChat">
+        <div style='text-align: center; padding: 5px; color:rgb(146 137 137); font-size: 12px;'>
+          <span @click='getHistory' class='pointer'>-- 更多记录 --</span>
+        </div>
         <li v-for="item in selectedMsgs"
             :key="item.msgId"
             class="message-item">
@@ -41,11 +44,11 @@
                  width="36"
                  height="36"
                  :class="{gray: !allReachable[item.openId] && !isSelf(item.sendType)}"
-                 :src="isSelf(item.sendType) ? user.avatar : (selectedChat.avatar || 'static/images/defaultAvatar.jpeg')" />
+                 :src="isSelf(item.sendType) ? 'static/images/UserAvatar.jpg' : 'static/images/defaultAvatar.jpeg'" />
             <div class="content">
               <div class="text"
                    v-if="item.msgType === 'text'"
-                   v-html="format(item)"></div>
+                   v-html="item.content"></div>
             </div>
           </div>
         </li>
@@ -67,9 +70,13 @@ export default {
     BreathingLamp
   },
   data() {
-    return { loading: false };
+    return {
+      loading: false,
+      page: 2
+    }
   },
   mounted() {
+    this.getInitInfo()
     this.scrollUp();
     // 通过$refs获取dom元素
     let box = this.$refs.list; // 监听这个dom的scroll事件
@@ -88,29 +95,92 @@ export default {
     );
   },
   methods: {
+    ...mapMutations(["setUserInfo", "addNewMsg", "loadMoreNewMsg"]),
+    getHistory () {
+      let box = this.$refs.list;
+      this.loadMore(box);
+    },
     loginOut () {
+      this.setUserInfo({})
+      this.$store.state.selectedMsgs = [{
+      sendType: 'kefu',
+      msgType: 'text',
+      date: 1543090745,
+      createTime: new Date,
+      openId: '123',
+      appId: '11',
+      content: '你好呀，我是智能客服，有什么可以帮到您的呢~'
+    }]
       this.$router.replace({name: 'Login'})
+    },
+    getInitInfo () {
+      ChatApi.getInitInfo().then(res => {
+        if (res.chatRecordList.length) {
+          this.$store.state.selectedMsgs = []
+        }
+        for (let v of res.chatRecordList.reverse()) {
+          this.addNewMsg({
+            appId: '11',
+            content: v.question,
+            openId: '12',
+            sendType: "SEND",
+            msgType: "text",
+            createTime: v.questionTime
+          })
+          this.addNewMsg({
+            appId: '11',
+            content: v.answer,
+            openId: '13',
+            sendType: "ANSWER",
+            msgType: "text",
+            createTime: v.answerTime
+          })
+        }
+      })
     },
     ...mapMutations(["loadMoreNewMsg"]),
     loadMore(box) {
-      let first = this.selectedMsgs[0];
-      let firstCreateTime = first && first.createTime;
+      // let first = this.selectedMsgs[0];
+      // let firstCreateTime = first && first.createTime;
       this.loading = true;
-      ChatApi.getRecordsByOpenId(this.selectId, firstCreateTime)
-        .then(rs => {
-          if (rs && rs.length) {
-            // 保存加载前的高度
-            let scrollHeight = box.scrollHeight;
-            this.loadMoreNewMsg(rs);
-            this.$nextTick(() => {
-              // 加载完回到之前滚去的位置上
-              box.scrollTop = box.scrollHeight - scrollHeight;
-            });
-          }
-        })
+      ChatApi.chatRecord({
+        page: this.page++,
+        size: 5
+      }).then(res => {
+        if (!res.chatRecordList.length) {
+          this.page--
+          return this.$alert("没有更多记录啦");
+        }
+        let temp = []
+        res.chatRecordList.reverse()
+        for (let v of res.chatRecordList) {
+          temp.push({
+            appId: '11',
+            content: v.question,
+            openId: '12',
+            sendType: "SEND",
+            msgType: "text",
+            createTime: v.questionTime
+          },{
+            appId: '11',
+            content: v.answer,
+            openId: '13',
+            sendType: "ANSWER",
+            msgType: "text",
+            createTime: v.answerTime
+          })
+        }
+        this.loadMoreNewMsg(temp)
+        let scrollHeight = box.scrollHeight;
+        // this.loadMoreNewMsg(rs);
+        this.$nextTick(() => {
+          // 加载完回到之前滚去的位置上
+          box.scrollTop = box.scrollHeight - scrollHeight;
+        });
+      })
         .catch(e => {
-          console.log("加载更多聊天记录失败", e);
-          this.$alert("加载更多聊天记录失败");
+          // console.log("加载更多聊天记录失败", e);
+          // this.$alert("加载更多聊天记录失败");
         })
         .finally(() => (this.loading = false));
       console.log("loadmore");
@@ -132,7 +202,7 @@ export default {
       let vue = this;
       setTimeout(() => {
         vue.$refs.list.scrollTop = vue.$refs.list.scrollHeight;
-      }, 500);
+      }, 50);
     }
   },
   computed: {
@@ -223,7 +293,7 @@ export default {
         margin-left: 10px;
         position: relative;
         padding: 6px 10px;
-        max-width: 330px;
+        max-width: 75%;
         min-height: 36px;
         line-height: 24px;
         box-sizing: border-box;

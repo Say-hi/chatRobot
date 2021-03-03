@@ -1,10 +1,10 @@
+import Vue from 'vue'
+import Router from '../router'
 var axios = require("axios");
 var qs = require("qs");
-
-axios.defaults.withCredentials = true;
-axios.defaults.headers.post["Content-Type"] =
-  "application/x-www-form-urlencoded;charset=UTF-8";
-axios.defaults.headers['X-Requested-With'] = 'XMLHttpRequest';
+var md5 = require('js-md5')
+var store = require('../store.js')
+let elVue = new Vue();
 
 function get(url, param) {
   return new Promise((resolve, reject) => {
@@ -25,20 +25,38 @@ function get(url, param) {
   })
 }
 
-function post(url, params) {
+function post(url, data) {
   return new Promise((resolve, reject) => {
-    axios
-      .post(url, qs.stringify(params))
-      .then((res) => {
-        let data = res.data || {
-          code: -99,
-          msg: res.statusText
-        };
-        return resolve(data);
-      })
-      .catch((err) => {
-        handleError(err, reject);
-      });
+    let timestamp = new Date().getTime()
+    // console.log('store', store)
+    let token = store.default.getters.token
+    // let str = `${token}${timestamp}`
+    // for (let val in data) {
+    //   str += data[val]
+    // }
+    axios.request({
+      url,
+      data,
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8',
+        token,
+        timestamp
+        // sign: md5(str)
+      }
+    }).then(res => {
+      if (res.data.code === 500) {
+        elVue.$alert(res.data.message || "服务器出错啦~")
+        reject(res.data)
+      } else if (res.data.code === 401) {
+        elVue.$alert(res.data.message || "服务器出错啦~")
+        Router.push({
+          name: 'Login'
+        })
+      } else {
+        resolve(res.data.data)
+      }
+    })
   })
 }
 
